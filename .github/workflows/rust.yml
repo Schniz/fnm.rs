@@ -3,7 +3,7 @@ name: Rust
 on: [push]
 
 jobs:
-  build_linux:
+  build:
 
     runs-on: ${{ matrix.os }}
     strategy:
