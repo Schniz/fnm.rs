@@ -76,19 +76,19 @@ impl PartialOrd for IndexedNodeVersion {
 }
 
 impl IndexedNodeVersion {
-    // pub fn download_url(&self, base_url: &reqwest::Url) -> reqwest::Url {
-    //     use crate::system_info::{HostArch, HostPlatform};
-    //     base_url
-    //         .join(&format!("{}/", self.version))
-    //         .unwrap()
-    //         .join(&format!(
-    //             "node-{node_ver}-{platform}-{arch}.tar.xz",
-    //             node_ver = &self.version,
-    //             platform = HostPlatform::default(),
-    //             arch = HostArch::default(),
-    //         ))
-    //         .unwrap()
-    // }
+    pub fn download_url(&self, base_url: &reqwest::Url) -> reqwest::Url {
+        use crate::system_info::{HostArch, HostPlatform};
+        base_url
+            .join(&format!("{}/", self.version))
+            .unwrap()
+            .join(&format!(
+                "node-{node_ver}-{platform}-{arch}.tar.xz",
+                node_ver = &self.version,
+                platform = HostPlatform::default(),
+                arch = HostArch::default(),
+            ))
+            .unwrap()
+    }
 }
 
 /// Prints

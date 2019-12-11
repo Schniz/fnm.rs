@@ -7,6 +7,10 @@ impl Version {
         let sver = semver::Version::parse(&version_plain)?;
         Ok(Self(sver))
     }
+
+    pub fn v_str(&self) -> String {
+        format!("v{}", self.0)
+    }
 }
 
 impl<'de> serde::Deserialize<'de> for Version {
@@ -35,6 +39,14 @@ impl AsRef<semver::Version> for Version {
 
 impl std::fmt::Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "v")?;
         self.0.fmt(f)
+    }
+}
+
+impl std::str::FromStr for Version {
+    type Err = semver::SemVerError;
+    fn from_str(s: &str) -> Result<Version, Self::Err> {
+        Self::parse(s)
     }
 }

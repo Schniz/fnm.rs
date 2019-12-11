@@ -3,6 +3,7 @@ mod config;
 mod remote_node_index;
 mod system_info;
 mod version;
+mod downloader;
 
 use clap::Clap;
 use commands::command::Command;
@@ -14,6 +15,8 @@ enum SubCommand {
     LsRemote(commands::ls_remote::LsRemote),
     #[clap(name = "ls", about = "List all local Node.js versions")]
     LsLocal(commands::ls_local::LsLocal),
+    #[clap(name = "install", about = "Install a new Node.js version")]
+    Install(commands::install::Install),
 }
 
 impl SubCommand {
@@ -21,6 +24,7 @@ impl SubCommand {
         match self {
             Self::LsLocal(cmd) => cmd.call(config),
             Self::LsRemote(cmd) => cmd.call(config),
+            Self::Install(cmd) => cmd.call(config),
         }
     }
 }
