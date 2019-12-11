@@ -10,7 +10,7 @@ impl super::command::Command for LsRemote {
 
     fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
         let mut all_versions = remote_node_index::list(&config.node_dist_mirror)?;
-        all_versions.sort_by(|a, b| a.version.cmp(&b.version));
+        all_versions.sort();
 
         for version in all_versions {
             print!("{}", version.version);

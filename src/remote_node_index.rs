@@ -1,4 +1,3 @@
-use crate::system_info::{HostArch, HostPlatform};
 use crate::version::Version;
 use serde::Deserialize;
 
@@ -27,9 +26,35 @@ mod lts_status {
     {
         Ok(LtsStatus::deserialize(deserializer)?.into())
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+
+        #[derive(Deserialize)]
+        struct TestSubject {
+            #[serde(deserialize_with = "deserialize")]
+            lts: Option<String>,
+        }
+
+        #[test]
+        fn test_false_deserialization() {
+            let json = serde_json::json!({ "lts": false });
+            let subject: TestSubject = serde_json::from_value(json).expect("Can't deserialize json");
+            assert_eq!(subject.lts, None);
+        }
+
+        #[test]
+        fn test_value_deserialization() {
+            let json = serde_json::json!({ "lts": "dubnium" });
+            let subject: TestSubject = serde_json::from_value(json).expect("Can't deserialize json");
+            assert_eq!(subject.lts, Some("dubnium".into()));
+        }
+    }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Eq, Ord)]
 pub struct IndexedNodeVersion {
     pub version: Version,
     #[serde(with = "lts_status")]
@@ -38,50 +63,81 @@ pub struct IndexedNodeVersion {
     pub files: Vec<String>,
 }
 
-impl IndexedNodeVersion {
-    pub fn download_url(&self, base_url: &reqwest::Url) -> reqwest::Url {
-        base_url
-            .join(&format!("{}/", self.version))
-            .unwrap()
-            .join(&format!(
-                "node-{node_ver}-{platform}-{arch}.tar.xz",
-                node_ver = &self.version,
-                platform = HostPlatform::default(),
-                arch = HostArch::default(),
-            ))
-            .unwrap()
+impl PartialEq for IndexedNodeVersion {
+    fn eq(&self, other: &Self) -> bool {
+        self.version.eq(&other.version)
     }
 }
 
-pub fn uncompressed_archive(
-    response: reqwest::Response,
-) -> tar::Archive<xz2::read::XzDecoder<reqwest::Response>> {
-    let xz_stream = xz2::read::XzDecoder::new(response);
-    tar::Archive::new(xz_stream)
+impl PartialOrd for IndexedNodeVersion {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.version.partial_cmp(&other.version)
+    }
 }
 
+impl IndexedNodeVersion {
+    // pub fn download_url(&self, base_url: &reqwest::Url) -> reqwest::Url {
+    //     use crate::system_info::{HostArch, HostPlatform};
+    //     base_url
+    //         .join(&format!("{}/", self.version))
+    //         .unwrap()
+    //         .join(&format!(
+    //             "node-{node_ver}-{platform}-{arch}.tar.xz",
+    //             node_ver = &self.version,
+    //             platform = HostPlatform::default(),
+    //             arch = HostArch::default(),
+    //         ))
+    //         .unwrap()
+    // }
+}
+
+/// Prints
+///
+/// ```rust
+/// use crate::remote_node_index::list;
+/// ```
 pub fn list(base_url: &reqwest::Url) -> Result<Vec<IndexedNodeVersion>, reqwest::Error> {
     let index_json_url = format!("{}/index.json", base_url);
     let value: Vec<IndexedNodeVersion> = reqwest::get(&index_json_url)?.json()?;
     Ok(value)
 }
 
-pub fn print_stuff() -> Result<(), reqwest::Error> {
-    let value: Vec<IndexedNodeVersion> =
-        reqwest::get("https://nodejs.org/dist/index.json")?.json()?;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
 
-    let xxx: Vec<_> = value.iter().filter(|x| x.lts.is_some()).collect();
-    let url = reqwest::Url::parse("https://nodejs.org/dist/").unwrap();
-
-    let url = xxx.first().unwrap().download_url(&url);
-    dbg!(&url);
-
-    println!("a");
-    let file_response = reqwest::get(url)?;
-    let mut tar_stream = uncompressed_archive(file_response);
-    println!("got tar stream");
-    tar_stream.unpack("/tmp/").ok();
-    println!("unpacked!");
-
-    Ok(())
+    #[test]
+    fn test_list() {
+        let base_url = reqwest::Url::parse("https://nodejs.org/dist").unwrap();
+        let expected_version = Version::parse("12.0.0").unwrap();
+        let mut versions = list(&base_url).expect("Can't get HTTP data");
+        assert_eq!(
+            versions
+                .drain(..)
+                .find(|x| x.version == expected_version)
+                .map(|x| x.version),
+            Some(expected_version)
+        );
+    }
 }
+
+// pub fn print_stuff() -> Result<(), reqwest::Error> {
+//     let value: Vec<IndexedNodeVersion> =
+//         reqwest::get("https://nodejs.org/dist/index.json")?.json()?;
+
+//     let xxx: Vec<_> = value.iter().filter(|x| x.lts.is_some()).collect();
+//     let url = reqwest::Url::parse("https://nodejs.org/dist/").unwrap();
+
+//     let url = xxx.first().unwrap().download_url(&url);
+//     dbg!(&url);
+
+//     println!("a");
+//     let file_response = reqwest::get(url)?;
+//     let mut tar_stream = uncompressed_archive(file_response);
+//     println!("got tar stream");
+//     tar_stream.unpack("/tmp/").ok();
+//     println!("unpacked!");
+
+//     Ok(())
+// }

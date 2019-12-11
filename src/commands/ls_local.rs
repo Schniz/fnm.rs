@@ -41,17 +41,6 @@ impl super::command::Command for LsLocal {
                 println!("{}", version_str);
             }
         }
-        // let mut all_versions = remote_node_index::list(&config.node_dist_mirror)?;
-        // all_versions.sort_by(|a, b| a.version.cmp(&b.version));
-
-        // for version in all_versions {
-        //     print!("{}", version.version);
-        //     if let Some(lts) = &version.lts {
-        //         print!(" ({})", lts);
-        //     }
-        //     println!("");
-        // }
-
         Ok(())
     }
 
