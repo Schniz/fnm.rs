@@ -1,14 +1,15 @@
+use crate::archive;
+use crate::archive::{Extract, TarXz, Zip};
 use crate::version::Version;
 use reqwest::Url;
 use std::path::Path;
 use std::path::PathBuf;
-use tar::Archive;
-use xz2::read::XzDecoder;
 
 #[derive(Debug)]
 pub enum Error {
     HttpError(reqwest::Error),
     IoError(std::io::Error),
+    ZipError(zip::result::ZipError),
     TarIsEmpty,
     VersionNotFound,
 }
@@ -25,18 +26,64 @@ impl From<std::io::Error> for Error {
     }
 }
 
-fn download_url(base_url: &Url, version: &Version) -> Url {
+impl From<zip::result::ZipError> for Error {
+    fn from(err: zip::result::ZipError) -> Self {
+        Self::ZipError(err)
+    }
+}
+
+impl From<archive::Error> for Error {
+    fn from(err: archive::Error) -> Self {
+        match err {
+            archive::Error::IoError(io_err) => Self::IoError(io_err),
+        }
+    }
+}
+
+#[cfg(unix)]
+fn filename_for_version(version: &Version) -> String {
     use crate::system_info::{HostArch, HostPlatform};
+    format!(
+        "node-{node_ver}-{platform}-{arch}.tar.xz",
+        node_ver = &version,
+        platform = HostPlatform::default(),
+        arch = HostArch::default(),
+    )
+}
+
+#[cfg(windows)]
+fn filename_for_version(version: &Version) -> String {
+    format!(
+        "node-{node_ver}-windows-{arch}.zip",
+        node_ver = &version,
+        arch = crate::system_info::HostArch::default(),
+    )
+}
+
+fn download_url(base_url: &Url, version: &Version) -> Url {
     base_url
         .join(&format!("{}/", version))
         .unwrap()
-        .join(&format!(
-            "node-{node_ver}-{platform}-{arch}.tar.xz",
-            node_ver = &version,
-            platform = HostPlatform::default(),
-            arch = HostArch::default(),
-        ))
+        .join(&filename_for_version(version))
         .unwrap()
+}
+
+#[cfg(unix)]
+pub fn extract_archive_into<P: AsRef<Path>>(
+    path: P,
+    response: reqwest::Response,
+) -> Result<(), Error> {
+    TarXz::new(response).extract_into(path)?;
+    Ok(())
+}
+
+#[cfg(windows)]
+pub fn extract_archive_into<P: AsRef<Path>>(
+    path: P,
+    mut response: reqwest::Response,
+) -> Result<(), Error> {
+    Zip::new(response).extract_into(path)?;
+    Ok(())
 }
 
 /// Install a Node package
@@ -54,10 +101,7 @@ pub fn install_node_dist<P: AsRef<Path>>(
 
     let mut installation_dir = PathBuf::from(installations_dir.as_ref());
     installation_dir.push(version.v_str());
-
-    let xz_stream = XzDecoder::new(response);
-    let mut tar_archive = Archive::new(xz_stream);
-    tar_archive.unpack(&installation_dir)?;
+    extract_archive_into(&installation_dir, response)?;
 
     let installed_directory = std::fs::read_dir(&installation_dir)?
         .next()
@@ -81,6 +125,21 @@ mod tests {
     use std::io::Read;
     use tempdir::TempDir;
 
+    #[cfg(unix)]
+    fn node_path<P: AsRef<Path>>(installation_dir: P) -> PathBuf {
+        let mut pathbuf = PathBuf::from(installation_dir.as_ref());
+        pathbuf.push("bin");
+        pathbuf.push("node");
+        pathbuf
+    }
+
+    #[cfg(windows)]
+    fn node_path<P: AsRef<Path>>(installation_dir: P) -> PathBuf {
+        let mut pathbuf = PathBuf::from(installation_dir.as_ref());
+        pathbuf.push("node.cmd");
+        pathbuf
+    }
+
     #[test]
     fn test_installing_node_12() {
         let version = Version::parse("12.0.0").unwrap();
@@ -92,8 +151,7 @@ mod tests {
         let mut location_path = PathBuf::from(&installations_dir.path());
         location_path.push(version.v_str());
         location_path.push("installation");
-        location_path.push("bin");
-        location_path.push("node");
+        let location_path = node_path(location_path);
 
         let mut result = String::new();
         std::process::Command::new(location_path.to_str().unwrap())

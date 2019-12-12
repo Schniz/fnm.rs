@@ -23,7 +23,7 @@ impl Default for HostPlatform {
         match host.to_lowercase().as_str() {
             "darwin" => Self::Darwin,
             "linux" => Self::Linux,
-            "windows" => panic!("We don't support Windows for now"),
+            "windows" => Self::Windows,
             os => panic!(format!("I don't know this OS: {}", os)),
         }
     }

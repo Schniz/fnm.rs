@@ -75,22 +75,6 @@ impl PartialOrd for IndexedNodeVersion {
     }
 }
 
-impl IndexedNodeVersion {
-    pub fn download_url(&self, base_url: &reqwest::Url) -> reqwest::Url {
-        use crate::system_info::{HostArch, HostPlatform};
-        base_url
-            .join(&format!("{}/", self.version))
-            .unwrap()
-            .join(&format!(
-                "node-{node_ver}-{platform}-{arch}.tar.xz",
-                node_ver = &self.version,
-                platform = HostPlatform::default(),
-                arch = HostArch::default(),
-            ))
-            .unwrap()
-    }
-}
-
 /// Prints
 ///
 /// ```rust
@@ -121,23 +105,3 @@ mod tests {
         );
     }
 }
-
-// pub fn print_stuff() -> Result<(), reqwest::Error> {
-//     let value: Vec<IndexedNodeVersion> =
-//         reqwest::get("https://nodejs.org/dist/index.json")?.json()?;
-
-//     let xxx: Vec<_> = value.iter().filter(|x| x.lts.is_some()).collect();
-//     let url = reqwest::Url::parse("https://nodejs.org/dist/").unwrap();
-
-//     let url = xxx.first().unwrap().download_url(&url);
-//     dbg!(&url);
-
-//     println!("a");
-//     let file_response = reqwest::get(url)?;
-//     let mut tar_stream = uncompressed_archive(file_response);
-//     println!("got tar stream");
-//     tar_stream.unpack("/tmp/").ok();
-//     println!("unpacked!");
-
-//     Ok(())
-// }
