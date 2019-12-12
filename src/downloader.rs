@@ -93,6 +93,7 @@ pub fn install_node_dist<P: AsRef<Path>>(
     installations_dir: P,
 ) -> Result<(), Error> {
     let url = download_url(node_dist_mirror, version);
+    println!("Going to call for {}", &url);
     let response = reqwest::get(url)?;
 
     if response.status() == 404 {
