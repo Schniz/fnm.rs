@@ -18,6 +18,11 @@ enum SubCommand {
     LsLocal(commands::ls_local::LsLocal),
     #[clap(name = "install", about = "Install a new Node.js version")]
     Install(commands::install::Install),
+    #[clap(
+        name = "env",
+        about = "Print and setup required environment variables for fnm"
+    )]
+    Env(commands::env::Env),
 }
 
 impl SubCommand {
@@ -26,6 +31,7 @@ impl SubCommand {
             Self::LsLocal(cmd) => cmd.call(config),
             Self::LsRemote(cmd) => cmd.call(config),
             Self::Install(cmd) => cmd.call(config),
+            Self::Env(cmd) => cmd.call(config),
         }
     }
 }
