@@ -82,7 +82,7 @@ pub fn extract_archive_into<P: AsRef<Path>>(
 #[cfg(windows)]
 pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
-    mut response: reqwest::Response,
+    response: reqwest::Response,
 ) -> Result<(), Error> {
     archive::Zip::new(response).extract_into(path)?;
     Ok(())

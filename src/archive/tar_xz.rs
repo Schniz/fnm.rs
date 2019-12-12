@@ -7,6 +7,7 @@ pub struct TarXz {
 }
 
 impl TarXz {
+    #[allow(dead_code)]
     pub fn new(response: Response) -> Self {
         Self { response }
     }
