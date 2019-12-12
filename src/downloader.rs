@@ -1,5 +1,5 @@
 use crate::archive;
-use crate::archive::{Extract, TarXz, Zip};
+use crate::archive::Extract;
 use crate::version::Version;
 use reqwest::Url;
 use std::path::Path;
@@ -75,7 +75,7 @@ pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
     response: reqwest::Response,
 ) -> Result<(), Error> {
-    TarXz::new(response).extract_into(path)?;
+    archive::TarXz::new(response).extract_into(path)?;
     Ok(())
 }
 
@@ -84,7 +84,7 @@ pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
     mut response: reqwest::Response,
 ) -> Result<(), Error> {
-    Zip::new(response).extract_into(path)?;
+    archive::Zip::new(response).extract_into(path)?;
     Ok(())
 }
 
