@@ -41,16 +41,3 @@ impl Extract for Zip {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_download_node_12() {
-        let tmp_dir = TempDir::new("node_12_installation").expect("Can't get a temp directory");
-        let response = reqwest::get("https://nodejs.org/dist/v12.0.0/node-v12.0.0-win-x64.zip")
-            .expect("Can't make request to node server");
-        Zip::new(response).extract_into(&tmp_dir).unwrap();
-    }
-}

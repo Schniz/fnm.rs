@@ -128,21 +128,6 @@ mod tests {
     use std::io::Read;
     use tempdir::TempDir;
 
-    #[cfg(unix)]
-    fn node_path<P: AsRef<Path>>(installation_dir: P) -> PathBuf {
-        let mut pathbuf = PathBuf::from(installation_dir.as_ref());
-        pathbuf.push("bin");
-        pathbuf.push("node");
-        pathbuf
-    }
-
-    #[cfg(windows)]
-    fn node_path<P: AsRef<Path>>(installation_dir: P) -> PathBuf {
-        let mut pathbuf = PathBuf::from(installation_dir.as_ref());
-        pathbuf.push("node");
-        pathbuf
-    }
-
     #[test]
     fn test_installing_node_12() {
         let version = Version::parse("12.0.0").unwrap();
@@ -154,7 +139,12 @@ mod tests {
         let mut location_path = PathBuf::from(&installations_dir.path());
         location_path.push(version.v_str());
         location_path.push("installation");
-        let location_path = node_path(location_path);
+
+        if cfg!(unix) {
+            location_path.push("bin");
+        }
+
+        location_path.push("node");
 
         let mut result = String::new();
         std::process::Command::new(location_path.to_str().unwrap())
