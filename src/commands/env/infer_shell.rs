@@ -45,9 +45,11 @@ fn get_process_info(pid: u32) -> std::io::Result<ProcessInfo> {
     let mut lines = BufReader::new(buffer).lines();
 
     // skip header line
-    lines
+    let first_line = lines
         .next()
         .expect("Can't read the header (1st) line from `ps`")?;
+
+    dbg!(&first_line);
 
     let line = lines
         .next()
