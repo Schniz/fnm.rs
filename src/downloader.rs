@@ -153,7 +153,7 @@ mod tests {
             .spawn()
             .expect("Can't find node executable")
             .stdout
-            .expect("Can't find stdout")
+            .expect("Can't capture stdout")
             .read_to_string(&mut result)
             .expect("Failed reading stdout");
         assert_eq!(result.trim(), "v12.0.0");
