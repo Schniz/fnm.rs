@@ -139,7 +139,7 @@ mod tests {
     #[cfg(windows)]
     fn node_path<P: AsRef<Path>>(installation_dir: P) -> PathBuf {
         let mut pathbuf = PathBuf::from(installation_dir.as_ref());
-        pathbuf.push("node.cmd");
+        pathbuf.push("node");
         pathbuf
     }
 
