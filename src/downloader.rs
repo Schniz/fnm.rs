@@ -35,7 +35,9 @@ impl From<zip::result::ZipError> for Error {
 impl From<archive::Error> for Error {
     fn from(err: archive::Error) -> Self {
         match err {
-            archive::Error::IoError(io_err) => Self::IoError(io_err),
+            archive::Error::IoError(err) => Self::IoError(err),
+            archive::Error::ZipError(err) => Self::ZipError(err),
+            archive::Error::HttpError(err) => Self::HttpError(err),
         }
     }
 }

@@ -41,14 +41,16 @@ mod lts_status {
         #[test]
         fn test_false_deserialization() {
             let json = serde_json::json!({ "lts": false });
-            let subject: TestSubject = serde_json::from_value(json).expect("Can't deserialize json");
+            let subject: TestSubject =
+                serde_json::from_value(json).expect("Can't deserialize json");
             assert_eq!(subject.lts, None);
         }
 
         #[test]
         fn test_value_deserialization() {
             let json = serde_json::json!({ "lts": "dubnium" });
-            let subject: TestSubject = serde_json::from_value(json).expect("Can't deserialize json");
+            let subject: TestSubject =
+                serde_json::from_value(json).expect("Can't deserialize json");
             assert_eq!(subject.lts, Some("dubnium".into()));
         }
     }
