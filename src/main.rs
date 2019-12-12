@@ -5,6 +5,7 @@ mod downloader;
 mod remote_node_index;
 mod system_info;
 mod version;
+mod fs;
 
 use clap::Clap;
 use commands::command::Command;

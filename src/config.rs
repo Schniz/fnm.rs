@@ -41,6 +41,17 @@ pub struct FnmConfig {
     pub loglevel: LogLevel,
 }
 
+impl Default for FnmConfig {
+    fn default() -> Self {
+        Self {
+            node_dist_mirror: reqwest::Url::parse("https://nodejs.org/dist/").unwrap(),
+            base_dir: None,
+            multishell_path: None,
+            loglevel: LogLevel::Info,
+        }
+    }
+}
+
 impl FnmConfig {
     pub fn base_dir_with_default(&self) -> std::path::PathBuf {
         (self.base_dir.clone()).unwrap_or({
@@ -53,6 +64,13 @@ impl FnmConfig {
     pub fn installations_dir(&self) -> std::path::PathBuf {
         let mut base_dir = self.base_dir_with_default();
         base_dir.push("node-versions");
+        base_dir
+    }
+
+    pub fn default_version_dir(&self) -> std::path::PathBuf {
+        let mut base_dir = self.base_dir_with_default();
+        base_dir.push("aliases");
+        base_dir.push("default");
         base_dir
     }
 }

@@ -6,12 +6,14 @@ struct ProcessInfo {
     command: String,
 }
 
+const MAX_ITERATIONS: u8 = 10;
+
 pub fn infer_shell() -> Option<Box<dyn Shell>> {
     let mut pid = Some(std::process::id());
     let mut visited = 0;
 
-    while pid != None && visited < 10 {
-        let process_info = get_process_info(pid.unwrap());
+    while pid != None && visited < MAX_ITERATIONS {
+        let process_info = get_process_info(pid.unwrap()).ok()?;
 
         match process_info.command.as_str().trim_start_matches('-') {
             "sh" | "bash" => return Some(Box::from(Bash)),
@@ -27,7 +29,7 @@ pub fn infer_shell() -> Option<Box<dyn Shell>> {
     None
 }
 
-fn get_process_info(pid: u32) -> ProcessInfo {
+fn get_process_info(pid: u32) -> std::io::Result<ProcessInfo> {
     use std::io::{BufRead, BufReader};
     use std::process::Command;
 
@@ -36,8 +38,7 @@ fn get_process_info(pid: u32) -> ProcessInfo {
         .arg("ppid,comm")
         .arg(pid.to_string())
         .stdout(std::process::Stdio::piped())
-        .spawn()
-        .expect("Can't infer shell!")
+        .spawn()?
         .stdout
         .expect("Can't read stdout from `ps`");
 
@@ -46,26 +47,24 @@ fn get_process_info(pid: u32) -> ProcessInfo {
     // skip header line
     lines
         .next()
-        .expect("ps doesn't work as expected! have you changed it? 1")
-        .expect("ps doesn't work as expected! have you changed it? 2");
+        .expect("Can't read the header (1st) line from `ps`")?;
 
     let line = lines
         .next()
-        .expect("ps doesn't work as expected! have you changed it? 3")
-        .expect("ps doesn't work as expected! have you changed it? 4");
+        .expect("Can't read the data (2nd) line from `ps`")?;
 
-    let mut parts = line.split(' ');
+    let mut parts = line.trim().split(' ');
     let ppid = parts
         .next()
-        .expect("ps doesn't work as expected! have you changed it? 5");
+        .expect("Can't read the ppid from ps, should be the first item in the table");
     let command = parts
         .next()
-        .expect("ps doesn't work as expected! have you changed it? 6");
+        .expect("Can't read the command from ps, should be the first item in the table");
 
-    ProcessInfo {
+    Ok(ProcessInfo {
         parent_pid: u32::from_str_radix(ppid, 10).ok(),
         command: command.into(),
-    }
+    })
 }
 
 #[cfg(all(test, unix))]
@@ -83,6 +82,7 @@ mod tests {
             .spawn()
             .expect("Can't execute command");
         let process_info = get_process_info(subprocess.id());
-        assert_eq!(process_info.parent_pid, Some(std::process::id()));
+        let parent_pid = process_info.ok().and_then(|x| x.parent_pid);
+        assert_eq!(parent_pid, Some(std::process::id()));
     }
 }

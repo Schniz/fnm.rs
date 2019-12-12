@@ -21,6 +21,7 @@ colored = "1.9.0"
 zip = "0.5.3"
 tempfile = "3.1.0"
 tempdir = "0.3.7"
+indoc = "0.3.4"
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"
