@@ -48,9 +48,9 @@ mod tests {
 
     #[test]
     fn download_node_12() {
-        let tmp_dir = TempDir::new("node_12").unwrap();
+        let tmp_dir = TempDir::new("node_12").expect("Can't get a temp directory");
         let response =
-            reqwest::get("https://nodejs.org/dist/v12.0.0/node-v12.0.0-win-x64.zip").unwrap();
+            reqwest::get("https://nodejs.org/dist/v12.0.0/node-v12.0.0-win-x64.zip").expect("Can't make request to node server");
         Zip::new(response).extract_into(tmp_dir.path()).unwrap();
     }
 }

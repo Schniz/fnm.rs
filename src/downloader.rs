@@ -54,7 +54,7 @@ fn filename_for_version(version: &Version) -> String {
 #[cfg(windows)]
 fn filename_for_version(version: &Version) -> String {
     format!(
-        "node-{node_ver}-windows-{arch}.zip",
+        "node-{node_ver}-win-{arch}.zip",
         node_ver = &version,
         arch = crate::system_info::HostArch::default(),
     )
