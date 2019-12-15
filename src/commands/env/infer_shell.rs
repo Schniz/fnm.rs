@@ -1,4 +1,4 @@
-use super::shell::{Bash, Shell, Zsh};
+use super::shell::Shell;
 use std::io::{Error, ErrorKind};
 
 #[derive(Debug)]
@@ -17,8 +17,9 @@ pub fn infer_shell() -> Option<Box<dyn Shell>> {
         let process_info = get_process_info(pid.unwrap()).ok()?;
 
         match process_info.command.as_str().trim_start_matches('-') {
-            "sh" | "bash" => return Some(Box::from(Bash)),
-            "zsh" => return Some(Box::from(Zsh)),
+            "sh" | "bash" => return Some(Box::from(super::bash::Bash)),
+            "zsh" => return Some(Box::from(super::zsh::Zsh)),
+            "fish" => return Some(Box::from(super::fish::Fish)),
             _ => (),
         };
 

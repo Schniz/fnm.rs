@@ -1,5 +1,9 @@
+mod bash;
+mod fish;
 mod infer_shell;
 mod shell;
+mod windows_cmd;
+mod zsh;
 
 use self::shell::{Shell, AVAILABLE_SHELLS};
 use super::command::Command;
@@ -41,7 +45,7 @@ impl Command for Env {
             Some(shell) => shell,
             None => {
                 if cfg!(windows) {
-                    Box::from(self::shell::WindowsCmd)
+                    Box::from(self::windows_cmd::WindowsCmd)
                 } else {
                     use self::infer_shell::infer_shell;
                     infer_shell().expect("Can't infer shell!")
@@ -71,9 +75,9 @@ mod tests {
     fn test_env() {
         let config = FnmConfig::default();
         let shell: Box<dyn Shell> = if cfg!(windows) {
-            Box::from(self::shell::WindowsCmd)
+            Box::from(self::windows_cmd::WindowsCmd)
         } else {
-            Box::from(self::shell::Bash)
+            Box::from(self::bash::Bash)
         };
         Env { shell: Some(shell) }.call(config);
     }
