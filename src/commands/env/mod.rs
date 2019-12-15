@@ -41,17 +41,13 @@ impl Command for Env {
     type Error = Error;
 
     fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
-        let shell: Box<dyn Shell> = match self.shell {
-            Some(shell) => shell,
-            None => {
-                if cfg!(windows) {
-                    Box::from(self::windows_cmd::WindowsCmd)
-                } else {
-                    use self::infer_shell::infer_shell;
-                    infer_shell().expect("Can't infer shell!")
-                }
+        let shell: Box<dyn Shell> = self.shell.unwrap_or_else(|| {
+            if cfg!(windows) {
+                Box::from(self::windows_cmd::WindowsCmd)
+            } else {
+                self::infer_shell::infer_shell().expect("Can't infer shell!")
             }
-        };
+        });
         let multishell_path = make_symlink(&config);
         println!("{}", shell.path(&multishell_path));
         println!(
