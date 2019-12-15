@@ -54,6 +54,7 @@ impl Command for Env {
             "{}",
             shell.set_env_var("FNM_MULTISHELL_PATH", multishell_path.to_str().unwrap())
         );
+        println!("{}", shell.set_env_var("FNM_DIR", config.base_dir_with_default().to_str().unwrap()));
         println!("{}", shell.use_on_cd());
         Ok(())
     }
