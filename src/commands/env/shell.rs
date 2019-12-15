@@ -8,6 +8,12 @@ pub trait Shell: Debug {
     fn use_on_cd(&self) -> String;
 }
 
+#[cfg(windows)]
+pub const AVAILABLE_SHELLS: [&'static str; 1] = ["cmd"];
+
+#[cfg(unix)]
+pub const AVAILABLE_SHELLS: [&'static str; 2] = ["bash", "zsh"];
+
 #[derive(Debug)]
 pub struct Bash;
 
@@ -90,5 +96,18 @@ impl Shell for WindowsCmd {
 
     fn use_on_cd(&self) -> String {
         "".into()
+    }
+}
+
+impl std::str::FromStr for Box<dyn Shell> {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Box<dyn Shell>, Self::Err> {
+        match s {
+            "cmd" => Ok(Box::from(WindowsCmd)),
+            "zsh" => Ok(Box::from(Zsh)),
+            "bash" => Ok(Box::from(Bash)),
+            shell_type => Err(format!("I don't know the shell type of {:?}", shell_type)),
+        }
     }
 }

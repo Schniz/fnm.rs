@@ -1,4 +1,5 @@
 use super::shell::{Bash, Shell, Zsh};
+use std::io::{Error, ErrorKind};
 
 #[derive(Debug)]
 struct ProcessInfo {
@@ -40,22 +41,18 @@ fn get_process_info(pid: u32) -> std::io::Result<ProcessInfo> {
         .stdout(std::process::Stdio::piped())
         .spawn()?
         .stdout
-        .expect("Can't read stdout from `ps`");
+        .ok_or(Error::from(ErrorKind::UnexpectedEof))?;
 
     let mut lines = BufReader::new(buffer).lines();
 
     // skip header line
-    let first_line = lines
+    lines
         .next()
-        .expect("Can't read the header (1st) line from `ps`")?;
+        .ok_or(Error::from(ErrorKind::UnexpectedEof))??;
 
-    dbg!(&first_line);
+    let line = lines.next().ok_or(Error::from(ErrorKind::NotFound))??;
 
-    let line = lines
-        .next()
-        .expect("Can't read the data (2nd) line from `ps`")?;
-
-    let mut parts = line.trim().split(' ');
+    let mut parts = line.trim().split_whitespace();
     let ppid = parts
         .next()
         .expect("Can't read the ppid from ps, should be the first item in the table");

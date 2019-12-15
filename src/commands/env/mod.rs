@@ -1,15 +1,20 @@
 mod infer_shell;
 mod shell;
 
-use self::shell::Shell;
+use self::shell::{Shell, AVAILABLE_SHELLS};
 use super::command::Command;
 use crate::config::FnmConfig;
+use crate::fs::symlink_dir;
 use clap::Clap;
 use std::fmt::Debug;
-use crate::fs::symlink_dir;
 
 #[derive(Clap, Debug)]
-pub struct Env {}
+pub struct Env {
+    /// The shell syntax to use. Infers when missing.
+    #[clap(long = "shell")]
+    #[clap(raw(possible_values = "&AVAILABLE_SHELLS"))]
+    shell: Option<Box<dyn Shell>>,
+}
 
 #[derive(Debug)]
 pub enum Error {}
@@ -32,14 +37,18 @@ impl Command for Env {
     type Error = Error;
 
     fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
-        let maybe_shell: Option<Box<dyn Shell>> = if cfg!(windows) {
-            Some(Box::from(self::shell::WindowsCmd))
-        } else {
-            use self::infer_shell::infer_shell;
-            infer_shell()
+        let shell: Box<dyn Shell> = match self.shell {
+            Some(shell) => shell,
+            None => {
+                if cfg!(windows) {
+                    Box::from(self::shell::WindowsCmd)
+                } else {
+                    use self::infer_shell::infer_shell;
+                    infer_shell().expect("Can't infer shell!")
+                }
+            }
         };
         let multishell_path = make_symlink(&config);
-        let shell = maybe_shell.expect("Can't infer shell!");
         println!("{}", shell.path(&multishell_path));
         println!(
             "{}",
@@ -54,11 +63,6 @@ impl Command for Env {
     }
 }
 
-#[cfg(windows)]
-fn infer_shell() -> Option<Box<WindowsCmd>> {
-    Box::from(WindowsCmd)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,6 +70,11 @@ mod tests {
     #[test]
     fn test_env() {
         let config = FnmConfig::default();
-        Env {}.call(config);
+        let shell: Box<dyn Shell> = if cfg!(windows) {
+            Box::from(self::shell::WindowsCmd)
+        } else {
+            Box::from(self::shell::Bash)
+        };
+        Env { shell: Some(shell) }.call(config);
     }
 }
