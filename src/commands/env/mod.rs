@@ -62,6 +62,10 @@ impl Command for Env {
             "{}",
             shell.set_env_var("FNM_LOGLEVEL", config.loglevel.into())
         );
+        println!(
+            "{}",
+            shell.set_env_var("FNM_NODE_DIST_MIRROR", config.node_dist_mirror.as_str())
+        );
         println!("{}", shell.use_on_cd());
         Ok(())
     }

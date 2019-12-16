@@ -7,11 +7,11 @@ pub struct Zsh;
 
 impl Shell for Zsh {
     fn path(&self, path: &PathBuf) -> String {
-        format!("export PATH={}/bin:$PATH", path.to_str().unwrap())
+        format!("export PATH={:?}/bin:$PATH", path.to_str().unwrap())
     }
 
     fn set_env_var(&self, name: &str, value: &str) -> String {
-        format!("export {}={}", name, value)
+        format!("export {}={:?}", name, value)
     }
 
     fn use_on_cd(&self) -> String {

@@ -7,11 +7,11 @@ pub struct Fish;
 
 impl Shell for Fish {
     fn path(&self, path: &PathBuf) -> String {
-        format!("set -gx PATH {}/bin $PATH;", path.to_str().unwrap())
+        format!("set -gx PATH {:?}/bin $PATH;", path.to_str().unwrap())
     }
 
     fn set_env_var(&self, name: &str, value: &str) -> String {
-        format!("set -gx {name} {value};", name = name, value = value)
+        format!("set -gx {name} {value:?};", name = name, value = value)
     }
 
     fn use_on_cd(&self) -> String {
