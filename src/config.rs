@@ -7,6 +7,15 @@ pub enum LogLevel {
     Info,
 }
 
+impl Into<&'static str> for LogLevel {
+    fn into(self) -> &'static str {
+        match self {
+            Self::Quiet => "quiet",
+            Self::Info => "info",
+        }
+    }
+}
+
 impl std::str::FromStr for LogLevel {
     type Err = String;
 

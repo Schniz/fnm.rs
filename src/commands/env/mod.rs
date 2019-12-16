@@ -58,6 +58,10 @@ impl Command for Env {
             "{}",
             shell.set_env_var("FNM_DIR", config.base_dir_with_default().to_str().unwrap())
         );
+        println!(
+            "{}",
+            shell.set_env_var("FNM_LOGLEVEL", config.loglevel.into())
+        );
         println!("{}", shell.use_on_cd());
         Ok(())
     }
@@ -72,7 +76,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_env() {
+    fn test_smoke() {
         let config = FnmConfig::default();
         let shell: Box<dyn Shell> = if cfg!(windows) {
             Box::from(self::windows_cmd::WindowsCmd)
