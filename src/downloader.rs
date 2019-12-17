@@ -63,11 +63,13 @@ fn filename_for_version(version: &Version) -> String {
 }
 
 fn download_url(base_url: &Url, version: &Version) -> Url {
-    base_url
-        .join(&format!("{}/", version))
-        .unwrap()
-        .join(&filename_for_version(version))
-        .unwrap()
+    Url::parse(&format!(
+        "{}/{}/{}",
+        base_url.as_str().trim_end_matches('/'),
+        version,
+        filename_for_version(version)
+    ))
+    .unwrap()
 }
 
 #[cfg(unix)]

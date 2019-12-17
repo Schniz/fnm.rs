@@ -3,6 +3,7 @@ mod commands;
 mod config;
 mod downloader;
 mod fs;
+mod installed_versions;
 mod remote_node_index;
 mod system_info;
 mod version;
@@ -19,6 +20,8 @@ enum SubCommand {
     LsLocal(commands::ls_local::LsLocal),
     #[clap(name = "install", about = "Install a new Node.js version")]
     Install(commands::install::Install),
+    #[clap(name = "use", about = "Change Node.js version")]
+    Use(commands::r#use::Use),
     #[clap(
         name = "env",
         about = "Print and setup required environment variables for fnm"
@@ -33,6 +36,7 @@ impl SubCommand {
             Self::LsRemote(cmd) => cmd.call(config),
             Self::Install(cmd) => cmd.call(config),
             Self::Env(cmd) => cmd.call(config),
+            Self::Use(cmd) => cmd.call(config),
         }
     }
 }

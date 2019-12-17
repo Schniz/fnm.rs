@@ -33,7 +33,7 @@ pub struct FnmConfig {
     /// https://nodejs.org/dist/ mirror
     #[clap(
         env = "FNM_NODE_DIST_MIRROR",
-        default_value = "https://nodejs.org/dist/"
+        default_value = "https://nodejs.org/dist"
     )]
     pub node_dist_mirror: reqwest::Url,
 

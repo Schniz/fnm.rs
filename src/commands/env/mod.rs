@@ -16,12 +16,9 @@ use std::fmt::Debug;
 pub struct Env {
     /// The shell syntax to use. Infers when missing.
     #[clap(long = "shell")]
-    #[clap(raw(possible_values = "&AVAILABLE_SHELLS"))]
+    #[clap(raw(possible_values = "AVAILABLE_SHELLS"))]
     shell: Option<Box<dyn Shell>>,
 }
-
-#[derive(Debug)]
-pub enum Error {}
 
 fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
     let temp_dir_name = format!(
@@ -38,7 +35,7 @@ fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
 }
 
 impl Command for Env {
-    type Error = Error;
+    type Error = ();
 
     fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
         let shell: Box<dyn Shell> = self.shell.unwrap_or_else(|| {
@@ -70,8 +67,8 @@ impl Command for Env {
         Ok(())
     }
 
-    fn handle_error(err: Self::Error) {
-        dbg!(err);
+    fn handle_error(_err: Self::Error) {
+        unreachable!();
     }
 }
 
