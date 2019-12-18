@@ -3,14 +3,22 @@ name: Rust
 on: [push]
 
 jobs:
-  build:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: stable
+    - uses: actions/checkout@v1
+    - name: cargo fmt
+      run: cargo fmt -- --check
 
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         rust: [stable]
-
     steps:
     - uses: hecrj/setup-rust-action@v1
       with:
