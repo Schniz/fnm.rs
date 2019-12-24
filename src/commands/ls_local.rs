@@ -1,9 +1,9 @@
 use crate::config::FnmConfig;
 use crate::version::Version;
-use clap::Clap;
 use colored::*;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct LsLocal {}
 
 fn current_version(config: &FnmConfig) -> Option<Version> {

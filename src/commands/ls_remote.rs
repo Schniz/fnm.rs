@@ -1,8 +1,8 @@
 use crate::config::FnmConfig;
 use crate::remote_node_index;
-use clap::Clap;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct LsRemote {}
 
 impl super::command::Command for LsRemote {

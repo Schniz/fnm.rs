@@ -3,9 +3,13 @@ use indoc::indoc;
 use std::path::PathBuf;
 
 #[derive(Debug)]
-pub struct Bash;
+pub struct Zsh;
 
-impl Shell for Bash {
+impl Shell for Zsh {
+    fn into_structopt_shell(&self) -> structopt::clap::Shell {
+        structopt::clap::Shell::Zsh
+    }
+
     fn path(&self, path: &PathBuf) -> String {
         format!("export PATH={:?}/bin:$PATH", path.to_str().unwrap())
     }
@@ -17,19 +21,19 @@ impl Shell for Bash {
     fn use_on_cd(&self) -> String {
         indoc!(
             r#"
-                __fnmcd () {
-                    cd "$@"
-
-                    if [[ -f .node-version && .node-version ]]; then
+                autoload -U add-zsh-hook
+                _fnm_autoload_hook () {
+                    if [[ -f .node-version && -r .node-version ]]; then
                         echo "fnm: Found .node-version"
                         fnm use
-                    elif [[ -f .nvmrc && .nvmrc ]]; then
+                    elif [[ -f .nvmrc && -r .nvmrc ]]; then
                         echo "fnm: Found .nvmrc"
                         fnm use
                     fi
                 }
 
-                alias cd=__fnmcd
+                add-zsh-hook chpwd _fnm_autoload_hook \
+                    && _fnm_autoload_hook
             "#
         )
         .into()

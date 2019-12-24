@@ -1,5 +1,5 @@
-use clap::Clap;
 use dirs::home_dir;
+use structopt::StructOpt;
 
 #[derive(Debug)]
 pub enum LogLevel {
@@ -28,25 +28,25 @@ impl std::str::FromStr for LogLevel {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct FnmConfig {
     /// https://nodejs.org/dist/ mirror
-    #[clap(
+    #[structopt(
         env = "FNM_NODE_DIST_MIRROR",
         default_value = "https://nodejs.org/dist"
     )]
     pub node_dist_mirror: reqwest::Url,
 
     /// The root directory of fnm installations.
-    #[clap(long = "fnm-dir", env = "FNM_DIR")]
+    #[structopt(long = "fnm-dir", env = "FNM_DIR")]
     pub base_dir: Option<std::path::PathBuf>,
 
     /// Where the current node version link is stored
-    #[clap(long = "multishell-path", env = "FNM_MULTISHELL_PATH")]
+    #[structopt(long = "multishell-path", env = "FNM_MULTISHELL_PATH")]
     pub multishell_path: Option<std::path::PathBuf>,
 
     /// The log level of fnm commands
-    #[clap(long = "loglevel", env = "FNM_LOGLEVEL", default_value = "info")]
+    #[structopt(long = "loglevel", env = "FNM_LOGLEVEL", default_value = "info")]
     pub loglevel: LogLevel,
 }
 

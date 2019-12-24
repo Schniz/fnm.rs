@@ -6,6 +6,10 @@ use std::path::PathBuf;
 pub struct Fish;
 
 impl Shell for Fish {
+    fn into_structopt_shell(&self) -> structopt::clap::Shell {
+        structopt::clap::Shell::Fish
+    }
+
     fn path(&self, path: &PathBuf) -> String {
         format!("set -gx PATH {:?}/bin $PATH;", path.to_str().unwrap())
     }

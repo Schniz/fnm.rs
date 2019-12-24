@@ -5,6 +5,10 @@ use std::path::PathBuf;
 pub struct WindowsCmd;
 
 impl Shell for WindowsCmd {
+    fn into_structopt_shell(&self) -> structopt::clap::Shell {
+        structopt::clap::Shell::PowerShell
+    }
+
     fn path(&self, path: &PathBuf) -> String {
         format!("SET PATH={};%PATH%", path.to_str().unwrap())
     }

@@ -2,10 +2,10 @@ use crate::config::FnmConfig;
 use crate::downloader::{install_node_dist, Error};
 use crate::remote_node_index;
 use crate::version::UserVersion;
-use clap::Clap;
 use colored::Colorize;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct Install {
     pub version: UserVersion,
 }

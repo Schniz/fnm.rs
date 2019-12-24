@@ -1,22 +1,15 @@
-mod bash;
-mod fish;
-mod infer_shell;
-mod shell;
-mod windows_cmd;
-mod zsh;
-
-use self::shell::{Shell, AVAILABLE_SHELLS};
 use super::command::Command;
 use crate::config::FnmConfig;
 use crate::fs::symlink_dir;
-use clap::Clap;
+use crate::shell::{infer_shell, Shell, AVAILABLE_SHELLS};
 use std::fmt::Debug;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct Env {
     /// The shell syntax to use. Infers when missing.
-    #[clap(long = "shell")]
-    #[clap(raw(possible_values = "AVAILABLE_SHELLS"))]
+    #[structopt(long = "shell")]
+    #[structopt(possible_values = AVAILABLE_SHELLS)]
     shell: Option<Box<dyn Shell>>,
 }
 
@@ -38,13 +31,7 @@ impl Command for Env {
     type Error = ();
 
     fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
-        let shell: Box<dyn Shell> = self.shell.unwrap_or_else(|| {
-            if cfg!(windows) {
-                Box::from(self::windows_cmd::WindowsCmd)
-            } else {
-                self::infer_shell::infer_shell().expect("Can't infer shell!")
-            }
-        });
+        let shell: Box<dyn Shell> = self.shell.unwrap_or_else(&infer_shell);
         let multishell_path = make_symlink(&config);
         println!("{}", shell.path(&multishell_path));
         println!(
@@ -78,11 +65,12 @@ mod tests {
 
     #[test]
     fn test_smoke() {
+        use crate::shell;
         let config = FnmConfig::default();
         let shell: Box<dyn Shell> = if cfg!(windows) {
-            Box::from(self::windows_cmd::WindowsCmd)
+            Box::from(shell::WindowsCmd)
         } else {
-            Box::from(self::bash::Bash)
+            Box::from(shell::Bash)
         };
         Env { shell: Some(shell) }.call(config);
     }

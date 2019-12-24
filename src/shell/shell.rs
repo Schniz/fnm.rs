@@ -5,6 +5,7 @@ pub trait Shell: Debug {
     fn path(&self, path: &PathBuf) -> String;
     fn set_env_var(&self, name: &str, value: &str) -> String;
     fn use_on_cd(&self) -> String;
+    fn into_structopt_shell(&self) -> structopt::clap::Shell;
 }
 
 #[cfg(windows)]
@@ -24,5 +25,11 @@ impl std::str::FromStr for Box<dyn Shell> {
             "fish" => Ok(Box::from(super::fish::Fish)),
             shell_type => Err(format!("I don't know the shell type of {:?}", shell_type)),
         }
+    }
+}
+
+impl Into<structopt::clap::Shell> for Box<dyn Shell> {
+    fn into(self) -> structopt::clap::Shell {
+        self.into_structopt_shell()
     }
 }

@@ -2,14 +2,14 @@ use super::command::Command;
 use super::install::Install;
 use crate::config::FnmConfig;
 use crate::version::UserVersion;
-use clap::Clap;
 use colored::Colorize;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
+#[derive(StructOpt, Debug)]
 pub struct Use {
     version: UserVersion,
     /// Install the version if it isn't installed yet
-    #[clap(long = "install-if-missing")]
+    #[structopt(long = "install-if-missing")]
     install_if_missing: bool,
 }
 
