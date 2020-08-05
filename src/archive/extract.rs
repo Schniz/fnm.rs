@@ -1,3 +1,4 @@
+use std::error::Error as StdError;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -6,6 +7,18 @@ pub enum Error {
     ZipError(zip::result::ZipError),
     HttpError(reqwest::Error),
 }
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::IoError(x) => x.fmt(f),
+            Self::ZipError(x) => x.fmt(f),
+            Self::HttpError(x) => x.fmt(f),
+        }
+    }
+}
+
+impl StdError for Error {}
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {

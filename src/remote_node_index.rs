@@ -84,7 +84,8 @@ impl PartialOrd for IndexedNodeVersion {
 /// ```
 pub fn list(base_url: &reqwest::Url) -> Result<Vec<IndexedNodeVersion>, reqwest::Error> {
     let index_json_url = format!("{}/index.json", base_url);
-    let value: Vec<IndexedNodeVersion> = reqwest::get(&index_json_url)?.json()?;
+    let mut value: Vec<IndexedNodeVersion> = reqwest::get(&index_json_url)?.json()?;
+    value.sort();
     Ok(value)
 }
 

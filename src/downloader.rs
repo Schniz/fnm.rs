@@ -1,45 +1,33 @@
 use crate::archive;
-use crate::archive::Extract;
+use crate::archive::{Error as ExtractError, Extract};
+use crate::directory_portal::DirectoryPortal;
 use crate::version::Version;
+use log::debug;
 use reqwest::Url;
+use snafu::{ensure, OptionExt, ResultExt, Snafu};
 use std::path::Path;
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Snafu)]
 pub enum Error {
-    HttpError(reqwest::Error),
-    IoError(std::io::Error),
-    ZipError(zip::result::ZipError),
+    HttpError {
+        source: reqwest::Error,
+    },
+    IoError {
+        source: std::io::Error,
+    },
+    #[snafu(display("Can't extract the file: {}", source))]
+    CantExtractFile {
+        source: ExtractError,
+    },
+    #[snafu(display("The downloaded archive is empty"))]
     TarIsEmpty,
+    #[snafu(display("Can't find version upstream"))]
     VersionNotFound,
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        Self::HttpError(err)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Self {
-        Self::IoError(err)
-    }
-}
-
-impl From<zip::result::ZipError> for Error {
-    fn from(err: zip::result::ZipError) -> Self {
-        Self::ZipError(err)
-    }
-}
-
-impl From<archive::Error> for Error {
-    fn from(err: archive::Error) -> Self {
-        match err {
-            archive::Error::IoError(err) => Self::IoError(err),
-            archive::Error::ZipError(err) => Self::ZipError(err),
-            archive::Error::HttpError(err) => Self::HttpError(err),
-        }
-    }
+    #[snafu(display("Version already installed at {:?}", path))]
+    VersionAlreadyInstalled {
+        path: PathBuf,
+    },
 }
 
 #[cfg(unix)]
@@ -77,7 +65,9 @@ pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
     response: reqwest::Response,
 ) -> Result<(), Error> {
-    archive::TarXz::new(response).extract_into(path)?;
+    archive::TarXz::new(response)
+        .extract_into(path)
+        .context(CantExtractFile)?;
     Ok(())
 }
 
@@ -86,7 +76,9 @@ pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
     response: reqwest::Response,
 ) -> Result<(), Error> {
-    archive::Zip::new(response).extract_into(path)?;
+    archive::Zip::new(response)
+        .extract_into(path)
+        .context(CantExtractFile)?;
     Ok(())
 }
 
@@ -96,27 +88,41 @@ pub fn install_node_dist<P: AsRef<Path>>(
     node_dist_mirror: &Url,
     installations_dir: P,
 ) -> Result<(), Error> {
+    let installation_dir = PathBuf::from(installations_dir.as_ref()).join(version.v_str());
+
+    ensure!(
+        !installation_dir.exists(),
+        VersionAlreadyInstalled {
+            path: PathBuf::from(installation_dir)
+        }
+    );
+
+    std::fs::create_dir_all(installations_dir.as_ref()).context(IoError)?;
+    let portal = DirectoryPortal::new(installation_dir);
+
     let url = download_url(node_dist_mirror, version);
-    println!("Going to call for {}", &url);
-    let response = reqwest::get(url)?;
+    debug!("Going to call for {}", &url);
+    let response = reqwest::get(url).context(HttpError)?;
 
     if response.status() == 404 {
         return Err(Error::VersionNotFound);
     }
 
-    let mut installation_dir = PathBuf::from(installations_dir.as_ref());
-    installation_dir.push(version.v_str());
-    extract_archive_into(&installation_dir, response)?;
+    debug!("Extracting response...");
+    extract_archive_into(&portal, response)?;
+    debug!("Extraction completed");
 
-    let installed_directory = std::fs::read_dir(&installation_dir)?
+    let installed_directory = std::fs::read_dir(&portal)
+        .context(IoError)?
         .next()
-        .ok_or(Error::TarIsEmpty)??;
+        .context(TarIsEmpty)?
+        .context(IoError)?;
     let installed_directory = installed_directory.path();
 
-    let mut renamed_installation_dir = PathBuf::from(&installation_dir);
-    renamed_installation_dir.push("installation");
+    let renamed_installation_dir = portal.join("installation");
+    std::fs::rename(installed_directory, renamed_installation_dir).context(IoError)?;
 
-    std::fs::rename(installed_directory, renamed_installation_dir)?;
+    portal.teleport().context(IoError)?;
 
     Ok(())
 }
@@ -128,13 +134,13 @@ mod tests {
     use crate::version::Version;
     use pretty_assertions::assert_eq;
     use std::io::Read;
-    use tempdir::TempDir;
+    use tempfile::tempdir;
 
-    #[test]
+    #[test_env_log::test]
     fn test_installing_node_12() {
         let version = Version::parse("12.0.0").unwrap();
         let node_dist_mirror = Url::parse("https://nodejs.org/dist/").unwrap();
-        let installations_dir = TempDir::new("node_12_installation").unwrap();
+        let installations_dir = tempdir().unwrap();
         install_node_dist(&version, &node_dist_mirror, &installations_dir)
             .expect("Can't install Node 12");
 

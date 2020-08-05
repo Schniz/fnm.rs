@@ -20,6 +20,12 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         rust: [stable]
     steps:
+    - name: Install Fish and Zsh using brew
+      if: "startsWith(matrix.os, 'macOS')"
+      run: brew install fish zsh
+    - name: Install Fish and Zsh using apt
+      if: "startsWith(matrix.os, 'ubuntu')"
+      run: sudo apt-get install -y fish zsh
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}

@@ -20,6 +20,14 @@ pub enum SubCommand {
     Env(commands::env::Env),
     #[structopt(name = "completions", about = "Create completions file")]
     Completions(commands::completions::Completions),
+    #[structopt(name = "alias", about = "alias a version to a common name")]
+    Alias(commands::alias::Alias),
+    #[structopt(name = "default", about = "set a version as the default version")]
+    Default(commands::default::Default),
+    #[structopt(name = "current", about = "The current version")]
+    Current(commands::current::Current),
+    #[structopt(name = "exec", about = "Run a command with in fnm context")]
+    Exec(commands::exec::Exec),
 }
 
 impl SubCommand {
@@ -31,6 +39,10 @@ impl SubCommand {
             Self::Env(cmd) => cmd.call(config),
             Self::Use(cmd) => cmd.call(config),
             Self::Completions(cmd) => cmd.call(config),
+            Self::Alias(cmd) => cmd.call(config),
+            Self::Default(cmd) => cmd.call(config),
+            Self::Current(cmd) => cmd.call(config),
+            Self::Exec(cmd) => cmd.call(config),
         }
     }
 }

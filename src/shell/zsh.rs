@@ -18,7 +18,7 @@ impl Shell for Zsh {
         format!("export {}={:?}", name, value)
     }
 
-    fn use_on_cd(&self) -> String {
+    fn use_on_cd(&self, _config: &crate::config::FnmConfig) -> String {
         indoc!(
             r#"
                 autoload -U add-zsh-hook

@@ -1,16 +1,23 @@
 use super::command::Command;
 use crate::config::FnmConfig;
-use crate::fs::symlink_dir;
+use crate::fs::{remove_symlink_dir, symlink_dir};
 use crate::shell::{infer_shell, Shell, AVAILABLE_SHELLS};
+use snafu::Snafu;
 use std::fmt::Debug;
 use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Default)]
 pub struct Env {
     /// The shell syntax to use. Infers when missing.
-    #[structopt(long = "shell")]
+    #[structopt(long)]
     #[structopt(possible_values = AVAILABLE_SHELLS)]
     shell: Option<Box<dyn Shell>>,
+    /// No-op. This is the default now.
+    #[structopt(long)]
+    multi: bool,
+    /// Print the script to change Node versions every directory change
+    #[structopt(long)]
+    use_on_cd: bool,
 }
 
 fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
@@ -19,8 +26,11 @@ fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
         chrono::Utc::now().to_rfc3339().replace(":", "__")
     );
 
-    let mut system_temp_dir = std::env::temp_dir();
-    system_temp_dir.push(&temp_dir_name);
+    let system_temp_dir = std::env::temp_dir().join(&temp_dir_name);
+
+    if system_temp_dir.exists() {
+        remove_symlink_dir(&system_temp_dir).expect("Can't remove symlink");
+    }
 
     symlink_dir(config.default_version_dir(), &system_temp_dir).expect("Can't create symlink!");
 
@@ -28,9 +38,9 @@ fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
 }
 
 impl Command for Env {
-    type Error = ();
+    type Error = Error;
 
-    fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
+    fn apply(self, config: &FnmConfig) -> Result<(), Self::Error> {
         let shell: Box<dyn Shell> = self.shell.unwrap_or_else(&infer_shell);
         let multishell_path = make_symlink(&config);
         println!("{}", shell.path(&multishell_path));
@@ -44,20 +54,21 @@ impl Command for Env {
         );
         println!(
             "{}",
-            shell.set_env_var("FNM_LOGLEVEL", config.loglevel.into())
+            shell.set_env_var("FNM_LOGLEVEL", config.log_level().clone().into())
         );
         println!(
             "{}",
             shell.set_env_var("FNM_NODE_DIST_MIRROR", config.node_dist_mirror.as_str())
         );
-        println!("{}", shell.use_on_cd());
+        if self.use_on_cd {
+            println!("{}", shell.use_on_cd(&config));
+        }
         Ok(())
     }
-
-    fn handle_error(_err: Self::Error) {
-        unreachable!();
-    }
 }
+
+#[derive(Debug, Snafu)]
+pub enum Error {}
 
 #[cfg(test)]
 mod tests {
@@ -72,6 +83,10 @@ mod tests {
         } else {
             Box::from(shell::Bash)
         };
-        Env { shell: Some(shell) }.call(config);
+        Env {
+            shell: Some(shell),
+            ..Env::default()
+        }
+        .call(config);
     }
 }

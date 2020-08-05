@@ -4,7 +4,7 @@ use std::path::PathBuf;
 pub trait Shell: Debug {
     fn path(&self, path: &PathBuf) -> String;
     fn set_env_var(&self, name: &str, value: &str) -> String;
-    fn use_on_cd(&self) -> String;
+    fn use_on_cd(&self, config: &crate::config::FnmConfig) -> String;
     fn into_structopt_shell(&self) -> structopt::clap::Shell;
 }
 

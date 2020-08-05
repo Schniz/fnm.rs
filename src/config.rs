@@ -1,37 +1,12 @@
+use crate::log_level::LogLevel;
 use dirs::home_dir;
 use structopt::StructOpt;
-
-#[derive(Debug)]
-pub enum LogLevel {
-    Quiet,
-    Info,
-}
-
-impl Into<&'static str> for LogLevel {
-    fn into(self) -> &'static str {
-        match self {
-            Self::Quiet => "quiet",
-            Self::Info => "info",
-        }
-    }
-}
-
-impl std::str::FromStr for LogLevel {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<LogLevel, Self::Err> {
-        match s {
-            "quiet" => Ok(Self::Quiet),
-            "info" => Ok(Self::Info),
-            loglevel => Err(format!("I don't know the log level of {:?}", loglevel)),
-        }
-    }
-}
 
 #[derive(StructOpt, Debug)]
 pub struct FnmConfig {
     /// https://nodejs.org/dist/ mirror
     #[structopt(
+        long,
         env = "FNM_NODE_DIST_MIRROR",
         default_value = "https://nodejs.org/dist"
     )]
@@ -42,12 +17,12 @@ pub struct FnmConfig {
     pub base_dir: Option<std::path::PathBuf>,
 
     /// Where the current node version link is stored
-    #[structopt(long = "multishell-path", env = "FNM_MULTISHELL_PATH")]
-    pub multishell_path: Option<std::path::PathBuf>,
+    #[structopt(long, env = "FNM_MULTISHELL_PATH")]
+    multishell_path: Option<std::path::PathBuf>,
 
     /// The log level of fnm commands
-    #[structopt(long = "loglevel", env = "FNM_LOGLEVEL", default_value = "info")]
-    pub loglevel: LogLevel,
+    #[structopt(long, env = "FNM_LOGLEVEL", default_value = "info")]
+    log_level: LogLevel,
 }
 
 impl Default for FnmConfig {
@@ -56,30 +31,44 @@ impl Default for FnmConfig {
             node_dist_mirror: reqwest::Url::parse("https://nodejs.org/dist/").unwrap(),
             base_dir: None,
             multishell_path: None,
-            loglevel: LogLevel::Info,
+            log_level: LogLevel::Info,
         }
     }
 }
 
 impl FnmConfig {
+    pub fn multishell_path(&self) -> Option<&std::path::Path> {
+        match &self.multishell_path {
+            None => None,
+            Some(v) => Some(v.as_path()),
+        }
+    }
+
+    pub fn log_level(&self) -> &LogLevel {
+        &self.log_level
+    }
+
     pub fn base_dir_with_default(&self) -> std::path::PathBuf {
-        (self.base_dir.clone()).unwrap_or({
-            let mut home_directory = home_dir().expect("Can't get home directory");
-            home_directory.push(".fnm");
-            home_directory
-        })
+        ensure_exists_silently(
+            (self.base_dir.clone())
+                .unwrap_or_else(|| home_dir().expect("Can't get home directory").join(".fnm")),
+        )
     }
 
     pub fn installations_dir(&self) -> std::path::PathBuf {
-        let mut base_dir = self.base_dir_with_default();
-        base_dir.push("node-versions");
-        base_dir
+        ensure_exists_silently(self.base_dir_with_default().join("node-versions"))
     }
 
     pub fn default_version_dir(&self) -> std::path::PathBuf {
-        let mut base_dir = self.base_dir_with_default();
-        base_dir.push("aliases");
-        base_dir.push("default");
-        base_dir
+        self.aliases_dir().join("default")
     }
+
+    pub fn aliases_dir(&self) -> std::path::PathBuf {
+        ensure_exists_silently(self.base_dir_with_default().join("aliases"))
+    }
+}
+
+fn ensure_exists_silently<T: AsRef<std::path::Path>>(path: T) -> T {
+    std::fs::create_dir_all(path.as_ref()).ok();
+    path
 }

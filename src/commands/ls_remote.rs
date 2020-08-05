@@ -1,5 +1,6 @@
 use crate::config::FnmConfig;
 use crate::remote_node_index;
+use snafu::{ResultExt, Snafu};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -8,8 +9,9 @@ pub struct LsRemote {}
 impl super::command::Command for LsRemote {
     type Error = Error;
 
-    fn apply(self, config: FnmConfig) -> Result<(), Self::Error> {
-        let mut all_versions = remote_node_index::list(&config.node_dist_mirror)?;
+    fn apply(self, config: &FnmConfig) -> Result<(), Self::Error> {
+        let mut all_versions =
+            remote_node_index::list(&config.node_dist_mirror).context(HttpError)?;
         all_versions.sort();
 
         for version in all_versions {
@@ -22,19 +24,9 @@ impl super::command::Command for LsRemote {
 
         Ok(())
     }
-
-    fn handle_error(err: Self::Error) {
-        println!("An error has occured! {:?}", err);
-    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Snafu)]
 pub enum Error {
-    HttpError(reqwest::Error),
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        Self::HttpError(err)
-    }
+    HttpError { source: reqwest::Error },
 }
