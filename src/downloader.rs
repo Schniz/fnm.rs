@@ -32,12 +32,12 @@ pub enum Error {
 
 #[cfg(unix)]
 fn filename_for_version(version: &Version) -> String {
-    use crate::system_info::{HostArch, HostPlatform};
+    use crate::system_info::{platform_arch, platform_name};
     format!(
         "node-{node_ver}-{platform}-{arch}.tar.xz",
         node_ver = &version,
-        platform = HostPlatform::default(),
-        arch = HostArch::default(),
+        platform = platform_name(),
+        arch = platform_arch(),
     )
 }
 
@@ -46,7 +46,7 @@ fn filename_for_version(version: &Version) -> String {
     format!(
         "node-{node_ver}-win-{arch}.zip",
         node_ver = &version,
-        arch = crate::system_info::HostArch::default(),
+        arch = crate::system_info::platform_arch(),
     )
 }
 
