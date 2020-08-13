@@ -32,7 +32,7 @@ impl Shell for Fish {
 pub(crate) struct Bash;
 impl Shell for Bash {
     fn currently_supported(&self) -> bool {
-        cfg!(not(windows))
+        true
     }
     fn name(&self) -> &'static str {
         "bash"
