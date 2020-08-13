@@ -5,7 +5,7 @@ use std::fmt::Write;
 #[derive(Debug, Default)]
 pub(crate) struct EvalFnmEnv {
     use_on_cd: bool,
-    node_dist_mirror: Option<reqwest::Url>,
+    log_level: Option<&'static str>,
 }
 
 impl EvalFnmEnv {
@@ -13,19 +13,16 @@ impl EvalFnmEnv {
         Self { use_on_cd, ..self }
     }
 
-    pub(crate) fn node_dist_mirror(self, node_dist_mirror: Option<impl reqwest::IntoUrl>) -> Self {
-        Self {
-            node_dist_mirror: node_dist_mirror.map(|x| x.into_url().unwrap()),
-            ..self
-        }
+    pub(crate) fn log_level(self, log_level: Option<&'static str>) -> Self {
+        Self { log_level, ..self }
     }
 }
 
 impl std::fmt::Display for EvalFnmEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "fnm")?;
-        if let Some(node_dist_mirror) = &self.node_dist_mirror {
-            write!(f, " --node-dist-mirror='{}'", node_dist_mirror)?;
+        if let Some(log_level) = &self.log_level {
+            write!(f, " --log-level='{}'", log_level)?;
         }
         write!(f, " env")?;
         if self.use_on_cd {

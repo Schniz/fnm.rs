@@ -11,7 +11,7 @@ impl Shell for Fish {
     }
 
     fn path(&self, path: &PathBuf) -> String {
-        format!("set -gx PATH {:?}/bin $PATH;", path.to_str().unwrap())
+        format!("set -gx PATH {:?} $PATH;", path.to_str().unwrap())
     }
 
     fn set_env_var(&self, name: &str, value: &str) -> String {

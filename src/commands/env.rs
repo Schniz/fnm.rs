@@ -1,6 +1,6 @@
 use super::command::Command;
 use crate::config::FnmConfig;
-use crate::fs::{remove_symlink_dir, symlink_dir};
+use crate::fs::symlink_dir;
 use crate::shell::{infer_shell, Shell, AVAILABLE_SHELLS};
 use snafu::Snafu;
 use std::fmt::Debug;
@@ -20,21 +20,25 @@ pub struct Env {
     use_on_cd: bool,
 }
 
-fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
+fn generate_symlink_path(root: &std::path::Path) -> std::path::PathBuf {
     let temp_dir_name = format!(
-        "fnm_multishell_{}",
-        chrono::Utc::now().to_rfc3339().replace(":", "__")
+        "fnm_multishell_{}_{}",
+        std::process::id(),
+        chrono::Utc::now().timestamp_millis(),
     );
+    root.join(temp_dir_name)
+}
 
-    let system_temp_dir = std::env::temp_dir().join(&temp_dir_name);
+fn make_symlink(config: &FnmConfig) -> std::path::PathBuf {
+    let system_temp_dir = std::env::temp_dir();
+    let mut temp_dir = generate_symlink_path(&system_temp_dir);
 
-    if system_temp_dir.exists() {
-        remove_symlink_dir(&system_temp_dir).expect("Can't remove symlink");
+    while temp_dir.exists() {
+        temp_dir = generate_symlink_path(&system_temp_dir);
     }
 
-    symlink_dir(config.default_version_dir(), &system_temp_dir).expect("Can't create symlink!");
-
-    system_temp_dir
+    symlink_dir(config.default_version_dir(), &temp_dir).expect("Can't create symlink!");
+    temp_dir
 }
 
 impl Command for Env {
@@ -43,7 +47,12 @@ impl Command for Env {
     fn apply(self, config: &FnmConfig) -> Result<(), Self::Error> {
         let shell: Box<dyn Shell> = self.shell.unwrap_or_else(&infer_shell);
         let multishell_path = make_symlink(&config);
-        println!("{}", shell.path(&multishell_path));
+        let binary_path = if cfg!(windows) {
+            multishell_path.clone()
+        } else {
+            multishell_path.join("bin")
+        };
+        println!("{}", shell.path(&binary_path));
         println!(
             "{}",
             shell.set_env_var("FNM_MULTISHELL_PATH", multishell_path.to_str().unwrap())

@@ -1,6 +1,6 @@
 #![cfg(unix)]
 
-use super::super::{Bash, Fish, Shell, Zsh};
+use super::super::{Bash, Fish, PowerShell, Shell, Zsh};
 use std::io::{Error, ErrorKind};
 
 #[derive(Debug)]
@@ -22,6 +22,7 @@ pub fn infer_shell() -> Option<Box<dyn Shell>> {
             "sh" | "bash" => return Some(Box::from(Bash)),
             "zsh" => return Some(Box::from(Zsh)),
             "fish" => return Some(Box::from(Fish)),
+            "pwsh" => return Some(Box::from(PowerShell)),
             _ => (),
         };
 

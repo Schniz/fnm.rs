@@ -10,11 +10,16 @@ use std::path::{Path, PathBuf};
 
 pub struct ApplicableVersion {
     path: PathBuf,
+    version: Version,
 }
 
 impl ApplicableVersion {
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    pub fn version(&self) -> &Version {
+        &self.version
     }
 }
 
@@ -29,6 +34,7 @@ pub fn choose_version_for_user_input<'a>(
         info!("Bypassing fnm: using {} node", "system".cyan());
         Some(ApplicableVersion {
             path: system_version::path(),
+            version: Version::Bypassed,
         })
     } else if let Some(alias_name) = requested_version.alias_name() {
         let alias_path = config.aliases_dir().join(&alias_name);
@@ -39,7 +45,10 @@ pub fn choose_version_for_user_input<'a>(
             }
         );
         info!("Using Node for alias {}", alias_name.cyan());
-        Some(ApplicableVersion { path: alias_path })
+        Some(ApplicableVersion {
+            path: alias_path,
+            version: Version::Alias(alias_name),
+        })
     } else {
         let current_version = requested_version.to_version(&all_versions);
         current_version.map(|version| {
@@ -49,7 +58,10 @@ pub fn choose_version_for_user_input<'a>(
                 .join(version.to_string())
                 .join("installation");
 
-            ApplicableVersion { path }
+            ApplicableVersion {
+                path,
+                version: version.clone(),
+            }
         })
     };
 
@@ -58,6 +70,8 @@ pub fn choose_version_for_user_input<'a>(
 
 #[derive(Debug, Snafu)]
 pub enum Error {
+    #[snafu(display("Can't find requested version: {}", requested_version))]
     CantFindVersion { requested_version: UserVersion },
+    #[snafu(display("Can't list local installed versions: {}", source))]
     VersionListing { source: installed_versions::Error },
 }

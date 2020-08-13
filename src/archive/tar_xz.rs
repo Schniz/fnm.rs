@@ -1,5 +1,5 @@
 use super::extract::{Error, Extract};
-use reqwest::Response;
+use reqwest::blocking::Response;
 use std::path::Path;
 
 pub struct TarXz {

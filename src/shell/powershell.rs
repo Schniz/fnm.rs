@@ -6,7 +6,7 @@ pub struct PowerShell;
 
 impl Shell for PowerShell {
     fn path(&self, path: &std::path::PathBuf) -> String {
-        let current_path = std::env::var_os("path").expect("Can't read PATH env var");
+        let current_path = std::env::var_os("PATH").expect("Can't read PATH env var");
         let mut split_paths: Vec<_> = std::env::split_paths(&current_path).collect();
         split_paths.insert(0, path.to_path_buf());
         let new_path = std::env::join_paths(split_paths).expect("Can't join paths");

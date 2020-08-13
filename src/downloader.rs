@@ -60,25 +60,15 @@ fn download_url(base_url: &Url, version: &Version) -> Url {
     .unwrap()
 }
 
-#[cfg(unix)]
 pub fn extract_archive_into<P: AsRef<Path>>(
     path: P,
-    response: reqwest::Response,
+    response: reqwest::blocking::Response,
 ) -> Result<(), Error> {
-    archive::TarXz::new(response)
-        .extract_into(path)
-        .context(CantExtractFile)?;
-    Ok(())
-}
-
-#[cfg(windows)]
-pub fn extract_archive_into<P: AsRef<Path>>(
-    path: P,
-    response: reqwest::Response,
-) -> Result<(), Error> {
-    archive::Zip::new(response)
-        .extract_into(path)
-        .context(CantExtractFile)?;
+    #[cfg(unix)]
+    let extractor = archive::TarXz::new(response);
+    #[cfg(windows)]
+    let extractor = archive::Zip::new(response);
+    extractor.extract_into(path).context(CantExtractFile)?;
     Ok(())
 }
 
@@ -102,7 +92,7 @@ pub fn install_node_dist<P: AsRef<Path>>(
 
     let url = download_url(node_dist_mirror, version);
     debug!("Going to call for {}", &url);
-    let response = reqwest::get(url).context(HttpError)?;
+    let response = reqwest::blocking::get(url).context(HttpError)?;
 
     if response.status() == 404 {
         return Err(Error::VersionNotFound);

@@ -13,7 +13,29 @@ jobs:
     - name: cargo fmt
       run: cargo fmt -- --check
 
-  build:
+  unit_tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        rust: [stable]
+    steps:
+    - name: Install PowerShell, Fish and Zsh using brew
+      if: "startsWith(matrix.os, 'macOS')"
+      run: |
+        brew install fish zsh
+        brew cask install powershell
+    - name: Install Fish and Zsh using apt
+      if: "startsWith(matrix.os, 'ubuntu')"
+      run: sudo apt-get install -y fish zsh powershell
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+    - uses: actions/checkout@v1
+    - name: Run tests
+      run: cargo test -- --skip=feature_tests --skip=raw_bash_tests
+
+  e2e_tests:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -30,7 +52,5 @@ jobs:
       with:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@v1
-    - name: Build
-      run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test -- feature_tests raw_bash_tests

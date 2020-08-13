@@ -11,7 +11,7 @@ impl Shell for Bash {
     }
 
     fn path(&self, path: &PathBuf) -> String {
-        format!("export PATH={:?}/bin:$PATH", path.to_str().unwrap())
+        format!("export PATH={:?}:$PATH", path.to_str().unwrap())
     }
 
     fn set_env_var(&self, name: &str, value: &str) -> String {

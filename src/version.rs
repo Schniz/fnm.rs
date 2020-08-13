@@ -41,6 +41,24 @@ impl Version {
     pub fn v_str(&self) -> String {
         format!("{}", self)
     }
+
+    pub fn installation_path(
+        &self,
+        config: &crate::config::FnmConfig,
+    ) -> Option<std::path::PathBuf> {
+        match self {
+            Self::Bypassed => None,
+            v @ Self::Lts(_) | v @ Self::Alias(_) => {
+                Some(config.aliases_dir().join(v.alias_name().unwrap()))
+            }
+            v @ Self::Semver(_) => Some(
+                config
+                    .installations_dir()
+                    .join(v.v_str())
+                    .join("installation"),
+            ),
+        }
+    }
 }
 
 impl<'de> serde::Deserialize<'de> for Version {

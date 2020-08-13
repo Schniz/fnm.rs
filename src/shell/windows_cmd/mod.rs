@@ -6,7 +6,7 @@ pub struct WindowsCmd;
 
 impl Shell for WindowsCmd {
     fn into_structopt_shell(&self) -> structopt::clap::Shell {
-        structopt::clap::Shell::PowerShell
+        panic!("Shell completion is not supported for Windows Command Prompt. Maybe try using PowerShell for a better experience?");
     }
 
     fn path(&self, path: &PathBuf) -> String {

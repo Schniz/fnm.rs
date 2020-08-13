@@ -12,10 +12,9 @@ pub fn create_alias(
     let aliases_dir = config.aliases_dir();
     std::fs::create_dir_all(&aliases_dir)?;
 
-    let version_dir = config
-        .installations_dir()
-        .join(version.v_str())
-        .join("installation");
+    let version_dir = version
+        .installation_path(config)
+        .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
     let alias_dir = aliases_dir.join(common_name);
 
     if alias_dir.exists() {

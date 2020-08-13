@@ -32,6 +32,10 @@ impl Cmd for Exec {
             .context(ApplicableVersionError)?
             .context(VersionNotFound { version })?;
 
+        #[cfg(windows)]
+        let bin_path = applicable_version.path().to_path_buf();
+
+        #[cfg(unix)]
         let bin_path = applicable_version.path().join("bin");
 
         let path_env = {

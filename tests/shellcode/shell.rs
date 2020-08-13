@@ -75,7 +75,14 @@ impl Shell for WinCmd {
         "cmd"
     }
     fn shell_escape(str: &str) -> Cow<str> {
-        shell_escape::windows::escape(Cow::from(str))
+        Cow::from(
+            str.replace('\r', "")
+                .replace('\n', "^\n\n")
+                .replace('%', "%%")
+                .replace('|', "^|")
+                .replace('(', "^(")
+                .replace(')', "^)"),
+        )
     }
 }
 
@@ -83,13 +90,17 @@ impl Shell for WinCmd {
 pub(crate) struct PowerShell;
 impl Shell for PowerShell {
     fn currently_supported(&self) -> bool {
-        cfg!(windows)
+        true
     }
     fn name(&self) -> &'static str {
         "powershell"
     }
     fn binary_name(&self) -> &'static str {
-        "powershell"
+        if cfg!(windows) {
+            "powershell"
+        } else {
+            "pwsh"
+        }
     }
     fn shell_escape(str: &str) -> Cow<str> {
         let new_str = format!("'{}'", str.replace('\'', "''"));

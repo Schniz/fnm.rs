@@ -94,7 +94,7 @@ impl<E: Expression<PowerShell>> Expression<PowerShell> for ExpectCommandOutput<P
         writedoc!(
             writer,
             r#"
-                If (({command} | Out-String) -ne "{expected_output}") {{
+                If ("$({command})" -ne "{expected_output}") {{
                     Write-Output ('Expected {message} to be {expected_output:?}, Got: ' + $({command}))
                     exit 1
                 }}

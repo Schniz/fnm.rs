@@ -27,7 +27,7 @@ pub fn infer_shell() -> Option<Box<dyn Shell>> {
                 Some("bash.exe") => {
                     return Some(Box::from(Bash));
                 }
-                Some("powershell.exe") => {
+                Some("powershell.exe") | Some("pwsh.exe") => {
                     return Some(Box::from(PowerShell));
                 }
                 _ => {}
@@ -53,8 +53,6 @@ pub fn get_process_tree(mut process_map: ProcessMap, pid: u32) -> Vec<ProcessInf
 }
 
 pub fn get_process_map() -> std::io::Result<ProcessMap> {
-    // wmic process get processid,parentprocessid,executablepath /format:csv
-
     let stdout = std::process::Command::new("wmic")
         .args(&[
             "process",
