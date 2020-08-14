@@ -67,6 +67,7 @@ impl Command for Use {
 
                     Install {
                         version: Some(requested_version.clone()),
+                        ..Default::default()
                     }
                     .apply(config)
                     .context(InstallError)?;

@@ -1,6 +1,7 @@
 use crate::alias::create_alias;
 use crate::config::FnmConfig;
 use crate::downloader::{install_node_dist, Error as DownloaderError};
+use crate::lts::LtsType;
 use crate::outln;
 use crate::remote_node_index;
 use crate::user_version::UserVersion;
@@ -11,9 +12,34 @@ use log::debug;
 use snafu::{ensure, OptionExt, ResultExt, Snafu};
 use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Default)]
 pub struct Install {
+    #[structopt(
+        help = "Version string. Can be a partial semver or a LTS version name by the format lts/NAME"
+    )]
     pub version: Option<UserVersion>,
+
+    #[structopt(long, help = "Install latest LTS")]
+    pub lts: bool,
+}
+
+impl Install {
+    fn version(self) -> Result<Option<UserVersion>, Error> {
+        match self {
+            Self {
+                version: Some(_),
+                lts: true,
+            } => Err(Error::TooManyVersionsProvided),
+            Self {
+                version: v,
+                lts: false,
+            } => Ok(v),
+            Self {
+                version: None,
+                lts: true,
+            } => Ok(Some(UserVersion::Full(Version::Lts(LtsType::Latest)))),
+        }
+    }
 }
 
 impl super::command::Command for Install {
@@ -22,7 +48,7 @@ impl super::command::Command for Install {
     fn apply(self, config: &FnmConfig) -> Result<(), Self::Error> {
         let current_dir = std::env::current_dir().unwrap();
         let current_version = self
-            .version
+            .version()?
             .or_else(|| get_user_version_from_file(current_dir))
             .context(CantInferVersion)?;
 
@@ -123,4 +149,6 @@ pub enum Error {
     UninstallableVersion {
         version: Version,
     },
+    #[snafu(display("Too many versions provided. Please don't use --lts with a version string."))]
+    TooManyVersionsProvided,
 }

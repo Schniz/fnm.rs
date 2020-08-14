@@ -4,6 +4,6 @@ expression: "&source.trim()"
 ---
 set -e
 eval "$(fnm env)"
-fnm install 'lts/*'
+fnm install --lts
 fnm ls | grep lts-latest
 fnm use 'lts/*'
