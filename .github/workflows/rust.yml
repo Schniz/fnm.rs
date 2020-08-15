@@ -46,26 +46,8 @@ jobs:
       run: cargo test -- feature_tests
 
   build_release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            os_type: Linux
-            filename: fnm
-            artifact_name: fnm-linux
-            strip: true
-          - os: windows-latest
-            filename: fnm.exe
-            os_type: Windows
-            artifact_name: fnm-windows
-            strip: false
-          - os: macos-latest
-            os_type: MacOS
-            filename: fnm
-            artifact_name: fnm-macos
-            strip: true
-    name: "Release build for ${{ matrix.os_type }}"
+    runs-on: windows-latest
+    name: "Release build for Windows"
     steps:
     - uses: hecrj/setup-rust-action@v1
       with:
@@ -73,10 +55,58 @@ jobs:
     - uses: actions/checkout@v1
     - name: Build release binary
       run: cargo build --release
-    - name: Strip binary from debug symbols
-      if: matrix.strip
-      run: strip target/release/${{ matrix.filename }}
+      env:
+        RUSTFLAGS: "-C target-feature=+crt-static"
+    - name: Compress binary using UPX
+      run: |
+        choco install upx
+        upx target/release/fnm.exe
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.artifact_name }}
-        path: target/release/${{ matrix.filename }}
+        name: fnm-windows
+        path: target/release/fnm.exe
+
+  build_macos_release:
+    runs-on: macOS-latest
+    name: "Release build for MacOS"
+    steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: stable
+    - uses: actions/checkout@v1
+    - name: Build release binary
+      run: cargo build --release
+      env:
+        LZMA_API_STATIC: "true"
+    - name: Strip binary from debug symbols
+      run: strip target/release/fnm
+    - name: List dynamically linked libraries
+      run: otool -L target/release/fnm
+    - name: Compress binary using UPX
+      run: |
+        brew install upx
+        upx target/release/fnm
+    - uses: actions/upload-artifact@v2
+      with:
+        name: fnm-macos
+        path: target/release/fnm
+
+  build_static_linux_binary:
+    name: "Build static Linux binary"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build static binary
+      run: |
+        sudo chown -R 1000:1000 .
+        docker run --rm -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder:stable \
+          cargo build --release
+        sudo chown -R $(whoami):$(whoami) .
+    - name: Compress binary using UPX
+      run: |
+        sudo apt-get install -y upx
+        upx target/x86_64-unknown-linux-musl/release/fnm
+    - uses: actions/upload-artifact@v2
+      with:
+        name: fnm-linux
+        path: target/x86_64-unknown-linux-musl/release/fnm
