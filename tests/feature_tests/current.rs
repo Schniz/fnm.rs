@@ -1,4 +1,4 @@
-test_shell!(Bash, Zsh, Fish, PowerShell; {
+test_shell!(Bash, Zsh, Fish, PowerShell, WinCmd; {
     EvalFnmEnv::default()
         .then(ExpectCommandOutput::new(
             Call::new("fnm", vec!["current"]),

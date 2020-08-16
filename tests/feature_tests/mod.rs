@@ -190,7 +190,7 @@ mod latest_lts {
 }
 
 mod matching_dotfiles {
-    test_shell!(Bash, Zsh, Fish, PowerShell; {
+    test_shell!(Bash, Zsh, Fish, PowerShell, WinCmd; {
         EvalFnmEnv::default()
             .then(WriteFile::new(".nvmrc", "11.10.0"))
             .then(WriteFile::new(".node-version", "11.10.0"))
