@@ -14,12 +14,11 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, Default)]
 pub struct Install {
-    #[structopt(
-        help = "Version string. Can be a partial semver or a LTS version name by the format lts/NAME"
-    )]
+    /// A version string. Can be a partial semver or a LTS version name by the format lts/NAME
     pub version: Option<UserVersion>,
 
-    #[structopt(long, help = "Install latest LTS")]
+    /// Install latest LTS
+    #[structopt(long)]
     pub lts: bool,
 }
 
