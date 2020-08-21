@@ -1,3 +1,4 @@
+/benchmarks/results
 /target
 **/*.rs.bk
 feature_tests/.tmp
