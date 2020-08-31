@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 pub struct ApplicableVersion {
     path: PathBuf,
-    version: Version,
+    candidates: Vec<Version>,
 }
 
 impl ApplicableVersion {
@@ -19,7 +19,14 @@ impl ApplicableVersion {
     }
 
     pub fn version(&self) -> &Version {
-        &self.version
+        self.candidates
+            .iter()
+            .max()
+            .expect("candidates list to have contents")
+    }
+
+    pub fn candidates(&self) -> &Vec<Version> {
+        &self.candidates
     }
 }
 
@@ -34,7 +41,7 @@ pub fn choose_version_for_user_input<'a>(
         info!("Bypassing fnm: using {} node", "system".cyan());
         Some(ApplicableVersion {
             path: system_version::path(),
-            version: Version::Bypassed,
+            candidates: vec![Version::Bypassed],
         })
     } else if let Some(alias_name) = requested_version.alias_name() {
         let alias_path = config.aliases_dir().join(&alias_name);
@@ -47,22 +54,30 @@ pub fn choose_version_for_user_input<'a>(
         info!("Using Node for alias {}", alias_name.cyan());
         Some(ApplicableVersion {
             path: alias_path,
-            version: Version::Alias(alias_name),
+            candidates: vec![Version::Alias(alias_name)],
         })
     } else {
-        let current_version = requested_version.to_version(&all_versions);
-        current_version.map(|version| {
-            info!("Using Node {}", version.to_string().cyan());
-            let path = config
-                .installations_dir()
-                .join(version.to_string())
-                .join("installation");
+        let mut all_versions = all_versions;
+        let applicable_versions: Vec<_> = all_versions
+            .drain(..)
+            .filter(|x| requested_version == x)
+            .collect();
 
-            ApplicableVersion {
-                path,
-                version: version.clone(),
+        match applicable_versions.iter().max() {
+            None => None,
+            Some(version) => {
+                info!("Using Node {}", version.to_string().cyan());
+                let path = config
+                    .installations_dir()
+                    .join(version.to_string())
+                    .join("installation");
+
+                Some(ApplicableVersion {
+                    path,
+                    candidates: applicable_versions,
+                })
             }
-        })
+        }
     };
 
     Ok(result)

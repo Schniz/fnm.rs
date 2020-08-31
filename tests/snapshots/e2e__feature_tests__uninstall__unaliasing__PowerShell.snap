@@ -1,0 +1,11 @@
+---
+source: tests/e2e.rs
+expression: "&source.trim()"
+---
+$ErrorActionPreference = "Stop"
+fnm env | Out-String | Invoke-Expression
+fnm install v10.11
+fnm alias v10.11 test-alias
+$($__out__ = $(fnm ls | Select-String 'test-alias'); echo $__out__; if ($__out__ -eq $null){ exit 1 } else { $__out__ })
+$($__out__ = $(fnm uninstall test-alias | Select-String 'Unaliased'); echo $__out__; if ($__out__ -eq $null){ exit 1 } else { $__out__ })
+$($__out__ = $(fnm ls | Select-String -NotMatch 'test-alias'); echo $__out__; if ($__out__ -eq $null){ exit 1 } else { $__out__ })

@@ -5,29 +5,49 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum SubCommand {
-    #[structopt(name = "ls-remote", about = "List all remote Node.js versions")]
+    /// List all remote Node.js versions
+    #[structopt(name = "ls-remote")]
     LsRemote(commands::ls_remote::LsRemote),
-    #[structopt(name = "ls", about = "List all local Node.js versions")]
+
+    /// List all local Node.js versions
+    #[structopt(name = "ls")]
     LsLocal(commands::ls_local::LsLocal),
-    #[structopt(name = "install", about = "Install a new Node.js version")]
+
+    /// Install a new Node.js version
+    #[structopt(name = "install")]
     Install(commands::install::Install),
-    #[structopt(name = "use", about = "Change Node.js version")]
+
+    /// Change Node.js version
+    #[structopt(name = "use")]
     Use(commands::r#use::Use),
-    #[structopt(
-        name = "env",
-        about = "Print and setup required environment variables for fnm"
-    )]
+
+    /// Print and setup required environment variables for fnm
+    #[structopt(name = "env")]
     Env(commands::env::Env),
-    #[structopt(name = "completions", about = "Create completions file")]
+
+    /// Create completions file
+    #[structopt(name = "completions")]
     Completions(commands::completions::Completions),
-    #[structopt(name = "alias", about = "alias a version to a common name")]
+
+    /// alias a version to a common name
+    #[structopt(name = "alias")]
     Alias(commands::alias::Alias),
-    #[structopt(name = "default", about = "set a version as the default version")]
+
+    /// set a version as the default version
+    #[structopt(name = "default")]
     Default(commands::default::Default),
-    #[structopt(name = "current", about = "The current version")]
+
+    /// The current version
+    #[structopt(name = "current")]
     Current(commands::current::Current),
-    #[structopt(name = "exec", about = "Run a command with in fnm context")]
+
+    /// Run a command in fnm context
+    #[structopt(name = "exec")]
     Exec(commands::exec::Exec),
+
+    /// Uninstall a Node version (with its globally installed modules)
+    #[structopt(name = "uninstall")]
+    Uninstall(commands::uninstall::Uninstall),
 }
 
 impl SubCommand {
@@ -43,6 +63,7 @@ impl SubCommand {
             Self::Default(cmd) => cmd.call(config),
             Self::Current(cmd) => cmd.call(config),
             Self::Exec(cmd) => cmd.call(config),
+            Self::Uninstall(cmd) => cmd.call(config),
         }
     }
 }

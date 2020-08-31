@@ -1,0 +1,11 @@
+---
+source: tests/e2e.rs
+expression: "&source.trim()"
+---
+set -e
+shopt -s expand_aliases
+
+eval "$(fnm env)"
+fnm install v10.11.0
+fnm uninstall v10.11.0 | grep 'Uninstalled version'
+fnm use v10.11.0 2>&1 | grep 'is not currently installed'

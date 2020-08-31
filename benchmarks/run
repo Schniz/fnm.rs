@@ -29,6 +29,7 @@ fi
 hyperfine \
   --warmup=2 \
   --min-runs=40 \
+  --time-unit=millisecond \
   --export-json="./results/basic.json" \
   --export-markdown="./results/basic.md" \
   "basic/nvm" \

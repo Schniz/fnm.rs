@@ -1,0 +1,13 @@
+---
+source: tests/e2e.rs
+expression: "&source.trim()"
+---
+set -e
+shopt -s expand_aliases
+
+eval "$(fnm env)"
+fnm install v10.11
+fnm alias v10.11 test-alias
+fnm ls | grep test-alias
+fnm uninstall test-alias | grep Unaliased
+fnm ls | grep -v test-alias

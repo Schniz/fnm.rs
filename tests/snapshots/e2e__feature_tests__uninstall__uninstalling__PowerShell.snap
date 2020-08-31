@@ -1,0 +1,9 @@
+---
+source: tests/e2e.rs
+expression: "&source.trim()"
+---
+$ErrorActionPreference = "Stop"
+fnm env | Out-String | Invoke-Expression
+fnm install v10.11.0
+$($__out__ = $(fnm uninstall v10.11.0 | Select-String 'Uninstalled version'); echo $__out__; if ($__out__ -eq $null){ exit 1 } else { $__out__ })
+$($__out__ = $($($_tmp_err_action = $ErrorActionPreference;$ErrorActionPreference = "Continue";fnm use v10.11.0 2>&1;$ErrorActionPreference = $_tmp_err_action) | Select-String 'is not currently installed'); echo $__out__; if ($__out__ -eq $null){ exit 1 } else { $__out__ })

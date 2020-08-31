@@ -18,11 +18,11 @@ pub struct FnmConfig {
 
     /// Where the current node version link is stored
     #[structopt(long, env = "FNM_MULTISHELL_PATH")]
-    multishell_path: Option<std::path::PathBuf>,
+    pub multishell_path: Option<std::path::PathBuf>,
 
     /// The log level of fnm commands
     #[structopt(long, env = "FNM_LOGLEVEL", default_value = "info")]
-    log_level: LogLevel,
+    pub log_level: LogLevel,
 }
 
 impl Default for FnmConfig {

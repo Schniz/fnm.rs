@@ -60,7 +60,7 @@ impl std::str::FromStr for UserVersion {
         match Version::parse(s) {
             Ok(v) => Ok(Self::Full(v)),
             Err(e) => {
-                let mut parts = s.trim().split('.');
+                let mut parts = s.trim().trim_start_matches('v').split('.');
                 match (next_of::<u64, _>(&mut parts), next_of::<u64, _>(&mut parts)) {
                     (Some(major), None) => Ok(Self::OnlyMajor(major)),
                     (Some(major), Some(minor)) => Ok(Self::MajorMinor(major, minor)),
