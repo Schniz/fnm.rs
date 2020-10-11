@@ -1,3 +1,5 @@
+## :warning: This code has been merged to https://github.com/Schniz/fnm :warning:
+
 # fnm_rust
 
 An experimental Rust implementation of [fnm](https://github.com/Schniz/fnm)
